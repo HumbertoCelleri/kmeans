@@ -6,10 +6,12 @@
 #include <time.h>
 #include "charm++.h"
 #include "main.decl.h"
+
+
 #include "Point.h"
 #include "Mean.h"
 
-using namespace std;
+
 
 /*readonly*/ CProxy_Main mainProxy;
 /*readonly*/ CProxy_Main containerProxy;
@@ -23,9 +25,20 @@ using namespace std;
 *        2. Inicializa y corre (run)
 *
 * - CONTENEDOR:
-*        1.
+*        1. Si es la primera vez, crea los puntos aleatoriamente.
+*        2. Calcula que puntos estan más cerca de cada centro 
+*           (Es un atributo del Punto)
+*        3. Devuelve los puntos (Contribute)
+*        4. 
+*
+* - MAIN:
+*        1. updateCenters: Toma los puntos y los suma a _centers_sumatoria.
+*        2. donestep: calcula nuevos centros con Mean.get_mean() 
+*        3. Asigna las nuevas posiciones.
 * 
 */
+
+using namespace std;
 
 /* Main class */
 class Main : public CBase_Main
@@ -168,11 +181,10 @@ public:
 	}
 
 	// Function to update the clustering vector
-	// Tenemos 3 vectores:
+	// Tenemos 2 vectores:
 	// - points[N]: tiene las posiciones de los puntos.
-	// - clustering[N]: tiene el indice de la zona mas cercana
-	// - cluster_position[k]: tiene las posiciones de los centros 
-	void updatePoints(vector<Punto> _cluster_position){
+	// - centers_position[k]: tiene las posiciones de los centros 
+	void updatePoints(vector<Mean> _centers_position){
 
 		double _distancia = 999;
 
@@ -182,9 +194,9 @@ public:
 
 			for (int j = 0; j < groupDimension; j++){
 				// Chequeamos el center más cernano al punto
-				if( puntos[i].distancia(_cluster_position[j]) < _distancia ) {
+				if( puntos[i].distancia(_centers_position[j]) < _distancia ) {
 					puntos[i]._zona = j; // Actualizamos el centro mas cercano
-					_distancia = puntos[i].distancia(_cluster_position[j]); // actualizamos la distancia a comparar
+					_distancia = puntos[i].distancia(_centers_position[j]); // actualizamos la distancia a comparar
 				}
 				
 			}
@@ -231,11 +243,17 @@ public:
  
 	}
 
+	// Function to resume after load balancing synchronization
+	void ResumeFromSync() {
+		contribute(sizeof(int), &iteration, CkReduction::max_int, CkCallback(CkReductionTarget(Main, donestep), mainProxy)); 
+	}
+
 	// PUP method
 	void pup(PUP::er &p) {
 		CBase_Container::pup(p);
 		p| points;
 	}
+
 
 };
 

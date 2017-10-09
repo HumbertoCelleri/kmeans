@@ -5,21 +5,23 @@ mainmodule main {
 
 	readonly CProxy_Main mainProxy;
     readonly CProxy_Container containerProxy;
-    //readonly CProxy_PointGroup pointGroupProxy;
-
     readonly int spatialDimension; // La del punto
     readonly int groupDimension; // k value
     readonly int chares, points, iter, LB_FREQ;
     
-    // MAIN CHARE: PREGUNTAR POR MIgrATABLE SI NO QUEREMOS HACER CHECKPOINT
-	mainchare [migratable] Main {
+
+	mainchare Main {
+
 		entry Main(CkArgMsg *m);
 
-        entry [reductiontarget] void printAVG(int average);    
-        entry [reductiontarget] void printMAX(int max);
-        entry [reductiontarget] void printAVGperproc(int average);    
-        entry [reductiontarget] void printMAXperproc(int max);
+        entry void reboot_vars();
+
+        // To update the center of all the points in each _zone
+        entry void updateCenters(Punto point);
+
+
         entry [reductiontarget] void donestep(int iter);
+
         entry void done();
 	};
 
@@ -30,21 +32,19 @@ mainmodule main {
 		// Constructor
         entry Container();
 
+        entry Container(CkArgMsg *m);
+
         // Methods
-        entry void resumeFromSync();
-        entry void run(); 
+        entry void run(vector<Mean> _cluster_position); // To run one iteration
+
+        // To update Punto atribute _zone (which center is closer?)
+        entry updatePoints(vector<Mean> _centers_position); 
+
+        // If all points are done
+        entry void finish();
+
+        entry void ResumeFromSync();
 	};
 
-/**
-    group [migratable] PointGroup {
-        // Constructor
-        entry PointGroup();
-
-        // Methods
-        entry void printPointInfo(int iteration);   // Colecta la informacion util: 
-                                                    // Maximo y suma de puntos por proceso
-        entry void collectNumPoints(int iter, int p); // Suma puntos al proceso
-  };
-*/
 
 };

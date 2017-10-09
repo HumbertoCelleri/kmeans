@@ -5,18 +5,29 @@
 #include <math.h>
 
 /*
-* Point object with coord[]: coordinates vector components
+* Point that acts as sum container of the points coordinates
 */
 
 class Mean : public Punto  {
 public:
 
-    int nbr_points_in_zone = 0; // Variable to count number of points in zone
+    int nbr_points_in_zone; // Variable to count number of points in zone
+
+    Mean(){
+        nbr_points_in_zone = 0;
+    }
+
+    Mean(int dim) : Punto(dim){
+        nbr_points_in_zone = 0;
+    }
+
+    Mean(int dim, vector<double> coords) : Punto(dim, coords){
+        nbr_points_in_zone = 0;
+    }
 
     /** Function to add coordinate to coordinate a new point
     *
     */
-    
     void suma(Punto seg_punto){
         
         nbr_points_in_zone += 1;
@@ -36,13 +47,10 @@ public:
             CkExit();
         }
     }
-    
-
 
     /** Function to get mean after iteration
     *
     */
-    
     Mean get_mean(){
         
         vector<double> _new_coords;
@@ -54,11 +62,17 @@ public:
 
         Mean result(_dim, _new_coords);
 
-        // Restart
-        nbr_points_in_zone = 0;
-
         return result;
     }
+
+    void pup(PUP::er &p){
+        p | _coords;
+        p | _dim;
+        p | _zona;
+        p | _nbr_points_in_zone;
+        
+    }
+
 
 };
 
