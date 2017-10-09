@@ -1,0 +1,50 @@
+mainmodule main {
+    
+    include "Point.h";
+    include "Mean.h";
+
+	readonly CProxy_Main mainProxy;
+    readonly CProxy_Container containerProxy;
+    //readonly CProxy_PointGroup pointGroupProxy;
+
+    readonly int spatialDimension; // La del punto
+    readonly int groupDimension; // k value
+    readonly int chares, points, iter, LB_FREQ;
+    
+    // MAIN CHARE: PREGUNTAR POR MIgrATABLE SI NO QUEREMOS HACER CHECKPOINT
+	mainchare [migratable] Main {
+		entry Main(CkArgMsg *m);
+
+        entry [reductiontarget] void printAVG(int average);    
+        entry [reductiontarget] void printMAX(int max);
+        entry [reductiontarget] void printAVGperproc(int average);    
+        entry [reductiontarget] void printMAXperproc(int max);
+        entry [reductiontarget] void donestep(int iter);
+        entry void done();
+	};
+
+    
+    // ARRAYS
+	array [1D] Container {
+
+		// Constructor
+        entry Container();
+
+        // Methods
+        entry void resumeFromSync();
+        entry void run(); 
+	};
+
+/**
+    group [migratable] PointGroup {
+        // Constructor
+        entry PointGroup();
+
+        // Methods
+        entry void printPointInfo(int iteration);   // Colecta la informacion util: 
+                                                    // Maximo y suma de puntos por proceso
+        entry void collectNumPoints(int iter, int p); // Suma puntos al proceso
+  };
+*/
+
+};
